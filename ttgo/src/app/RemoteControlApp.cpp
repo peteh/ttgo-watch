@@ -1,21 +1,26 @@
-#include "RemoteControl.h"
+#include "RemoteControlApp.h"
 #include <Log.h>
 
 namespace app
 {
-    void RemoteControl::setup()
+    const char RemoteControlApp::ID[] = "app.remotecontrol";
+
+    RemoteControlApp::RemoteControlApp()
+        : m_left(0.0),
+          m_right(0.0),
+          m_timestampLastSend(millis())
     {
-        m_watch = TTGOClass::getWatch();
+    }
 
-        // Initialize the hardware, the BMA423 sensor has been initialized internally
-        m_watch->begin();
-
+    void RemoteControlApp::setupApp()
+    {
+        Log::debug("Setup app");
         // Turn on the backlight
-        m_watch->openBL();
+        getWatch()->openBL();
 
         //Receive objects for easy writing
-        m_tft = m_watch->tft;
-        m_bmaSensor = m_watch->bma;
+        m_tft = getWatch()->tft;
+        m_bmaSensor = getWatch()->bma;
 
         // Accel parameter structure
         Acfg cfg;
@@ -67,75 +72,77 @@ namespace app
 
         // Enable BMA423 accelerometer
         // Warning : Need to use feature, you must first enable the accelerometer
-        // Warning : Need to use feature, you must first enable the accelerometer
-        // Warning : Need to use feature, you must first enable the accelerometer
         m_bmaSensor->enableAccel();
         m_remote.init();
 
         m_left = 0.;
         m_right = 0;
+        Log::debug("end Setup app");
     }
 
-    void RemoteControl::loop()
+    const char *RemoteControlApp::loopApp()
     {
+        lv_task_handler();
+
         // Obtain the BMA423 direction,
         // so that the screen orientation is consistent with the sensor
         Accel acc;
         m_bmaSensor->getAccel(acc);
         int16_t touchX;
         int16_t touchY;
-        bool isTouched = m_watch->getTouch(touchX, touchY);
-        Log::infof("Acc: %d, %d, %d", acc.x, acc.y, acc.z);
+        bool isTouched = getWatch()->getTouch(touchX, touchY);
+        //Log::infof("Acc: %d, %d, %d", acc.x, acc.y, acc.z);
 
         uint8_t rotation = m_bmaSensor->direction();
         if (m_prevRotation != rotation)
         {
             m_prevRotation = rotation;
-            Serial.println(rotation);
             switch (rotation)
             {
             case DIRECTION_DISP_DOWN:
                 //No use
+                m_left = 0.;
+                m_right = 0;
                 break;
             case DIRECTION_DISP_UP:
                 // stop
-                m_tft->setRotation(4);
                 m_left = 0.;
                 m_right = 0;
                 break;
             case DIRECTION_BOTTOM_EDGE:
-                // right
-                m_left = 1.;
-                m_right = -1.;
-                m_tft->setRotation(1);
-                break;
-            case DIRECTION_TOP_EDGE:
                 // left
                 m_left = -1.;
                 m_right = 1.;
-                m_tft->setRotation(0);
+                break;
+            case DIRECTION_TOP_EDGE:
+                // right
+                m_left = 1.;
+                m_right = -1.;
                 break;
             case DIRECTION_RIGHT_EDGE:
+                // forward
+                m_left = 1.;
+                m_right = 1.;
+                break;
+            case DIRECTION_LEFT_EDGE:
                 // backwards
                 m_left = -1.;
                 m_right = -1.;
-                m_tft->setRotation(3);
-                break;
-            case DIRECTION_LEFT_EDGE:
-                // forwarnd
-                m_left = 1.;
-                m_right = 1.;
-                m_tft->setRotation(2);
                 break;
             default:
                 break;
             }
-
-            m_tft->fillScreen(TFT_BLACK);
+            // TODO: update the visualization
             m_tft->drawCentreString("T-Watch", 120, 120, 4);
         }
-        m_remote.send(m_left, m_right, isTouched);
+        if (millis() - m_timestampLastSend >= 20)
+        {
+            m_timestampLastSend = millis();
+            Log::debugf("Left: %f, Right: %f", m_left, m_right);
+            m_remote.send(m_left, m_right, isTouched);
+        }
         m_remote.loop();
-        delay(50);
+        delay(5);
+        return nullptr;
     }
 }

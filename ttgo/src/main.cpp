@@ -1,18 +1,12 @@
+#include "config.h"
+
 #include <Arduino.h>
-
-
-// => Hardware select
-// #define LILYGO_WATCH_2019_WITH_TOUCH     //To use T-Watch2019 with touchscreen, please uncomment this line
-// #define LILYGO_WATCH_2019_NO_TOUCH       //To use T-Watch2019 Not touchscreen , please uncomment this line
-// #define LILYGO_WATCH_2020_V1             //To use T-Watch2020 V1, please uncomment this line
-// #define LILYGO_WATCH_2020_V2             //To use T-Watch2020 V2, please uncomment this line
-#define LILYGO_WATCH_2020_V3 //To use T-Watch2020 V3, please uncomment this line
-
-// => Function select
-#define LILYGO_WATCH_LVGL //To use LVGL, you need to enable the macro LVGL
 #include <LilyGoWatch.h>
 
-#include <app/ACControl.h>
+#include <app/ACControlApp.h>
+#include <app/MainMenuApp.h>
+#include <app/WifiSettingsApp.h>
+#include <app/AppFactory.h>
 #include <app/ButtonTest.h>
 
 #include <PubSubClient.h>
@@ -20,16 +14,48 @@
 #include <Log.h>
 #include <SerialLogger.h>
 
+app::IApp *g_app;
+app::AppFactory g_appFactory;
 
-app::ButtonTestApp g_app;
-void setup2()
+void setup()
 {
     Serial.begin(115200);
     Log::init(new SerialLogger());
-    g_app.setup();
+    // Initialize the hardware, the BMA423 sensor has been initialized internally
+    TTGOClass::getWatch()->begin();
+
+    // Turn on the backlight
+    TTGOClass::getWatch()->openBL();
+    TTGOClass::getWatch()->tft->begin();
+    TTGOClass::getWatch()->lvgl_begin();
+
+    Log::debug("Mounting FS...");
+    if (!SPIFFS.begin())
+    {
+        Log::error("Failed to mount file system");
+        return;
+    }
+
+    // we turn the clock around to have infrared at the top and button on the left
+    TTGOClass::getWatch()->lvgl_whirling(4);
+    //g_app = g_appFactory.createApp(app::MainMenuApp::ID);
+    g_app = g_appFactory.createApp(app::WifiSettingsApp::ID);
+    g_app->setup();
 }
 
-void loop2()
+void loop()
 {
-    g_app.loop();
+    const char *nextAppID = g_app->loop();
+
+    if (nextAppID != nullptr)
+    {
+        app::IApp *currentApp = g_app;
+        Log::infof("Main: Switching to %s", nextAppID);
+        currentApp->tearDown();
+        delete (currentApp);
+        
+        g_app = g_appFactory.createApp(nextAppID);
+        g_app->setup();
+        
+    }
 }

@@ -6,8 +6,8 @@ namespace app
     {
         public: 
         
-        virtual void setup() override;
-        virtual void loop() override;
+        virtual void setupApp() override;
+        virtual const char* loopApp() override;
     };
 
 

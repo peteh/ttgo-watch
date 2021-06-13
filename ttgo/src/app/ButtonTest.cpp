@@ -2,7 +2,7 @@
 
 namespace app
 {
-
+/*
     static void event_handler(lv_obj_t *obj, lv_event_t event)
     {
         if (event == LV_EVENT_CLICKED)
@@ -14,9 +14,10 @@ namespace app
             Serial.printf("Toggled\n");
         }
     }
-
-    void ButtonTestApp::setup()
+*/
+    void ButtonTestApp::setupApp()
     {
+        /*
         getWatch()->begin();
         getWatch()->openBL();
         getWatch()->lvgl_begin();
@@ -39,12 +40,14 @@ namespace app
 
         label = lv_label_create(btn2, NULL);
         lv_label_set_text(label, "Toggled");
+        */
     }
 
-    void ButtonTestApp::loop()
+    const char* ButtonTestApp::loopApp()
     {
-        lv_task_handler();
+        //lv_task_handler();
         delay(5);
+        return nullptr;
     }
 
 }
