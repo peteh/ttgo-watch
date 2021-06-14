@@ -8,7 +8,7 @@
 #include <app/WifiSettingsApp.h>
 #include <app/AppFactory.h>
 #include <app/ButtonTest.h>
-
+#include <WifiManager.h>
 #include <PubSubClient.h>
 
 #include <Log.h>
@@ -35,11 +35,12 @@ void setup()
         Log::error("Failed to mount file system");
         return;
     }
+    twatch::WifiManager::instance().init();
 
     // we turn the clock around to have infrared at the top and button on the left
     TTGOClass::getWatch()->lvgl_whirling(4);
     //g_app = g_appFactory.createApp(app::MainMenuApp::ID);
-    g_app = g_appFactory.createApp(app::WifiSettingsApp::ID);
+    g_app = g_appFactory.createApp(app::RemoteControlApp::ID);
     g_app->setup();
 }
 
@@ -53,9 +54,8 @@ void loop()
         Log::infof("Main: Switching to %s", nextAppID);
         currentApp->tearDown();
         delete (currentApp);
-        
+
         g_app = g_appFactory.createApp(nextAppID);
         g_app->setup();
-        
     }
 }

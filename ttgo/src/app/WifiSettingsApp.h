@@ -22,6 +22,11 @@ namespace app
 
         static void _internalEventHandler(lv_obj_t *obj, lv_event_t event)
         {
+            if(s_instance!= nullptr)
+            {
+                Log::error("Instance already destroyed but events are coming in");
+                return;
+            }
             instance()->buttonEventHandler(obj, event);
         }
 
@@ -34,5 +39,6 @@ namespace app
         lv_obj_t *m_rollerWifiSSID;
         lv_obj_t *m_textPassword;
         lv_obj_t *m_keyboard;
+        lv_obj_t *m_labelPassword;
     };
 }

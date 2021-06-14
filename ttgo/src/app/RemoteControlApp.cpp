@@ -8,7 +8,8 @@ namespace app
     RemoteControlApp::RemoteControlApp()
         : m_left(0.0),
           m_right(0.0),
-          m_timestampLastSend(millis())
+          m_timestampLastSend(millis()),
+          m_imuPoint(nullptr)
     {
     }
 
@@ -78,6 +79,9 @@ namespace app
         m_left = 0.;
         m_right = 0;
         Log::debug("end Setup app");
+        m_imuPoint  = lv_led_create(lv_scr_act(), NULL);
+        lv_obj_align(m_imuPoint, NULL, LV_ALIGN_CENTER, 0, 0);
+        lv_led_on(m_imuPoint);
     }
 
     const char *RemoteControlApp::loopApp()
@@ -88,11 +92,14 @@ namespace app
         // so that the screen orientation is consistent with the sensor
         Accel acc;
         m_bmaSensor->getAccel(acc);
-        int16_t touchX;
-        int16_t touchY;
-        bool isTouched = getWatch()->getTouch(touchX, touchY);
+        
         //Log::infof("Acc: %d, %d, %d", acc.x, acc.y, acc.z);
+        float xNormalized = - acc.x / 1024.;
+        float yNormalized = acc.y / 1024. ;
 
+        Log::infof("Acc: %.2f, %.2f", xNormalized, yNormalized);
+
+        lv_obj_align(m_imuPoint, NULL, LV_ALIGN_CENTER, (int) (-yNormalized * LV_HOR_RES / 2. ), (int) (-xNormalized * LV_VER_RES / 2.));
         uint8_t rotation = m_bmaSensor->direction();
         if (m_prevRotation != rotation)
         {
@@ -133,12 +140,13 @@ namespace app
                 break;
             }
             // TODO: update the visualization
-            m_tft->drawCentreString("T-Watch", 120, 120, 4);
+            //m_tft->drawCentreString("T-Watch", 120, 120, 4);
         }
         if (millis() - m_timestampLastSend >= 20)
         {
+            bool isTouched = getWatch()->touched();
             m_timestampLastSend = millis();
-            Log::debugf("Left: %f, Right: %f", m_left, m_right);
+            //Log::debugf("Left: %f, Right: %f", m_left, m_right);
             m_remote.send(m_left, m_right, isTouched);
         }
         m_remote.loop();

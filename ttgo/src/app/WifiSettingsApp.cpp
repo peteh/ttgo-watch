@@ -15,8 +15,8 @@ namespace app
           m_btnConnect(nullptr),
           m_rollerWifiSSID(nullptr),
           m_textPassword(nullptr),
-          m_keyboard(nullptr)
-
+          m_keyboard(nullptr),
+          m_labelPassword(nullptr)
     {
         // HACK: for the event listeners as they can only be static functions
         s_instance = this;
@@ -24,7 +24,17 @@ namespace app
 
     WifiSettingsApp::~WifiSettingsApp()
     {
-        //lv_obj_del(m_btnmatrixMenu);
+
+        lv_obj_del(m_btnScan);
+        lv_obj_del(m_btnConnect);
+        lv_obj_del(m_rollerWifiSSID);
+        lv_obj_del(m_textPassword);
+        lv_obj_del(m_labelPassword);
+        if (m_keyboard != nullptr)
+        {
+            lv_obj_del(m_keyboard);
+        }
+
         s_instance = nullptr;
     }
 
@@ -47,6 +57,7 @@ namespace app
         if (obj == m_keyboard)
         {
             Log::debug("keyboard event");
+            // pass keyboad events to the default keyboard handler
             lv_keyboard_def_event_cb(m_keyboard, event);
             if (event == LV_EVENT_APPLY)
             {
@@ -98,17 +109,7 @@ namespace app
                 Log::infof("SSID: %s", ssid);
                 Log::infof("Pass: %s", password);
 
-                // TODO: refactor this part into wifi manager class
-                // TODO: implement timeout
-                WiFi.disconnect();
-                WiFi.begin(ssid, password);
-                Log::info("Connecting");
-                while (WiFi.status() != WL_CONNECTED)
-                {
-                    delay(500);
-                    Log::infof("Wifi Status: %d", WiFi.status());
-                }
-                Log::infof("Connected, IP address: %s", WiFi.localIP().toString().c_str());
+                bool success = getWifiManager().connectAndStore(ssid, password);
             }
         }
     }
@@ -192,9 +193,9 @@ namespace app
         //lv_obj_set_auto_realign(m_btnConnect, true);
         lv_obj_align(m_btnConnect, m_rollerWifiSSID, LV_ALIGN_OUT_BOTTOM_MID, 45, 0);
 
-        lv_obj_t *labelPassword = lv_label_create(lv_scr_act(), NULL);
-        lv_label_set_text(labelPassword, "Password: ");
-        lv_obj_align(labelPassword, NULL, LV_ALIGN_IN_TOP_LEFT, 25, 10);
+        m_labelPassword = lv_label_create(lv_scr_act(), NULL);
+        lv_label_set_text(m_labelPassword, "Password: ");
+        lv_obj_align(m_labelPassword, NULL, LV_ALIGN_IN_TOP_LEFT, 25, 10);
 
         m_textPassword = lv_textarea_create(lv_scr_act(), NULL);
         lv_textarea_set_text(m_textPassword, "");
@@ -205,7 +206,7 @@ namespace app
         lv_obj_set_pos(m_textPassword, 5, 20);
         lv_obj_set_event_cb(m_textPassword, _internalEventHandler);
 
-        lv_obj_align(m_textPassword, labelPassword, LV_ALIGN_OUT_RIGHT_MID, 0, 0);
+        lv_obj_align(m_textPassword, m_labelPassword, LV_ALIGN_OUT_RIGHT_MID, 0, 0);
     }
 
     const char *WifiSettingsApp::loopApp()

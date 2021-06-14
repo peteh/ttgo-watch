@@ -2,6 +2,7 @@
 #include "App.h"
 #include "../config.h"
 #include <LilyGoWatch.h>
+#include "../WifiManager.h"
 
 namespace app
 {
@@ -21,6 +22,11 @@ namespace app
         virtual TTGOClass *getWatch()
         {
             return m_watch;
+        }
+
+        virtual twatch::WifiManager& getWifiManager()
+        {
+            return twatch::WifiManager::instance();
         }
 
         virtual void setup();

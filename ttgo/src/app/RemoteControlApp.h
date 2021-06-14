@@ -24,5 +24,7 @@ namespace app
         float m_right;
 
         long m_timestampLastSend;
+
+        lv_obj_t * m_imuPoint;
     };
 }
