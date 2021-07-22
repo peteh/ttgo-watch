@@ -2,7 +2,6 @@
 
 #include "AbstractApp.h"
 #include <LilyGoWatch.h>
-#include <Thread.h>
 
 namespace app
 {

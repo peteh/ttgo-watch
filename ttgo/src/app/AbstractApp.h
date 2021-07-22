@@ -1,7 +1,9 @@
 #pragma once
-#include "App.h"
 #include "../config.h"
 #include <LilyGoWatch.h>
+
+#include "App.h"
+#include "WatchButton.h"
 #include "../WifiManager.h"
 
 namespace app
@@ -10,7 +12,9 @@ namespace app
     {
     protected:
         AbstractApp()
-            : m_watch(TTGOClass::getWatch())
+            : m_watch(TTGOClass::getWatch()),
+            m_watchButtonPresses(0),
+            m_watchButton()
         {
         }
 
@@ -22,6 +26,11 @@ namespace app
         virtual TTGOClass *getWatch()
         {
             return m_watch;
+        }
+
+        virtual uint watchButtonWasPressed()
+        {
+            return m_watchButtonPresses;
         }
 
         virtual twatch::WifiManager& getWifiManager()
@@ -60,6 +69,7 @@ namespace app
         TTGOClass *m_watch;
 
 
-        bool m_buttonWasPressed;
+        uint m_watchButtonPresses;
+        WatchButton m_watchButton;
     };
 }

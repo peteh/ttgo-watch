@@ -40,7 +40,7 @@ void setup()
     // we turn the clock around to have infrared at the top and button on the left
     TTGOClass::getWatch()->lvgl_whirling(4);
     //g_app = g_appFactory.createApp(app::MainMenuApp::ID);
-    g_app = g_appFactory.createApp(app::RemoteControlApp::ID);
+    g_app = g_appFactory.createApp(app::MainMenuApp::ID);
     g_app->setup();
 }
 

@@ -26,7 +26,7 @@ namespace app
 
     const char *AbstractApp::loop()
     {
-        m_buttonWasPressed = false;
+        bool watchButtonPressed = false;
 
         if (s_powerInterrupt)
         {
@@ -43,12 +43,18 @@ namespace app
             if (getWatch()->power->isPEKShortPressIRQ())
             {
                 Log::debug("Button pressed");
-                m_buttonWasPressed = true;
+                watchButtonPressed = true;
             }
             getWatch()->power->clearIRQ();
         }
 
-        if(m_buttonWasPressed)
+        m_watchButtonPresses = m_watchButton.evaluate(watchButtonPressed);
+        if(m_watchButtonPresses > 0)
+        {
+            Log::debugf("Pressed: %d", m_watchButtonPresses);
+        }
+
+        if(watchButtonWasPressed() == 2)
         {
             return MainMenuApp::ID;
         }
