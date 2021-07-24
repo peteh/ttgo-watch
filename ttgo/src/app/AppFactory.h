@@ -6,6 +6,7 @@
 #include "ACControlApp.h"
 #include "ClockDigitalApp.h"
 #include "ClockStarTrekApp.h"
+#include "ClockSettingsApp.h"
 #include "MainMenuApp.h"
 #include "RemoteControlApp.h"
 #include "WifiSettingsApp.h"
@@ -28,6 +29,12 @@ namespace app
             {
                 return new ClockDigitalApp();
             }
+
+            if (strcmp(appId, ClockSettingsApp::ID) == 0)
+            {
+                return new ClockSettingsApp();
+            }
+
             if (strcmp(appId, ClockStarTrekApp::ID) == 0)
             {
                 return new ClockStarTrekApp();
@@ -52,7 +59,7 @@ namespace app
             {
                 return new WifiSettingsApp();
             }
-            
+
             Log::errorf("App with ID %s does not exist, will die now", appId);
             return nullptr;
         }

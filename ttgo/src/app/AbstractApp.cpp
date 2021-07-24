@@ -1,9 +1,19 @@
-#include "AbstractApp.h"
-#include "MainMenuApp.h"
 #include <Log.h>
+
+#include "AbstractApp.h"
+#include "ClockStarTrekApp.h"
+
 namespace app
 {
     volatile bool AbstractApp::s_powerInterrupt = false;
+
+    AbstractApp::AbstractApp()
+        : m_watch(TTGOClass::getWatch()),
+          m_watchButtonPresses(0),
+          m_watchButton()
+    {
+        setWatchButtonApp(ClockStarTrekApp::ID);
+    }
 
     void AbstractApp::setup()
     {
@@ -21,8 +31,6 @@ namespace app
         getWatch()->power->clearIRQ();
         setupApp();
     }
-
-
 
     const char *AbstractApp::loop()
     {
@@ -49,14 +57,14 @@ namespace app
         }
 
         m_watchButtonPresses = m_watchButton.evaluate(watchButtonPressed);
-        if(m_watchButtonPresses > 0)
+        if (m_watchButtonPresses > 0)
         {
             Log::debugf("Pressed: %d", m_watchButtonPresses);
         }
 
-        if(watchButtonWasPressed() == 2)
+        if (watchButtonWasPressed() == 2)
         {
-            return MainMenuApp::ID;
+            return m_watchButtonAppId;
         }
 
         // TODO: try to handle gestures here

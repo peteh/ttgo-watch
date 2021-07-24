@@ -10,6 +10,7 @@ namespace app
     ClockStarTrekApp::ClockStarTrekApp()
     :m_fullUpdate(true)
     {
+        setWatchButtonApp(MainMenuApp::ID);
     }
 
     void ClockStarTrekApp::setupApp()

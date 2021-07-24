@@ -2,14 +2,20 @@
 #include "MainMenuApp.h"
 #include "ACControlApp.h"
 #include "ClockDigitalApp.h"
+#include "ClockSettingsApp.h"
 #include "ClockStarTrekApp.h"
 #include "RemoteControlApp.h"
+#include "WifiSettingsApp.h"
 #include "TVBGone/TVBGoneApp.h"
 namespace app
 {
     const char MainMenuApp::ID[] = "app.mainmenu";
-    const char *MainMenuApp::s_btnMap[] = {"AC", "Digital", "StarTrek", "\n", "Remote","TVBGone" , ""};
-    const char *MainMenuApp::s_appIDs[] = {ACControlApp::ID, ClockDigitalApp::ID, ClockStarTrekApp::ID,  RemoteControlApp::ID, TVBGoneApp::ID};
+    const char *MainMenuApp::s_btnMap[] = {"AC", "Digital", "StarTrek", "\n", 
+    "Remote","TVBGone" , "\n"
+    "Clock", "WiFi", ""};
+    const char *MainMenuApp::s_appIDs[] = {ACControlApp::ID, ClockDigitalApp::ID, ClockStarTrekApp::ID,  
+    RemoteControlApp::ID, TVBGoneApp::ID,
+    ClockSettingsApp::ID, WifiSettingsApp::ID};
 
     // TODO: proper destructor
     MainMenuApp *MainMenuApp::s_instance = nullptr;
