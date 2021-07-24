@@ -1,9 +1,10 @@
+#pragma once
 /*
 Last Updated: 30 Mar. 2018
 By Anton Grimpelhuber (anton.grimpelhuber@gmail.com)
 Added discrete Samsung / NECv2 power off code_eu140Code
 
-TV-B-Gone for Arduino version 0.001
+TV-B-Gone for Arduino version 0.001VBGone
 Ported to Arduino by Ken Shirriff, Dec 3, 2009
 http://arcfn.com
 
@@ -17,7 +18,25 @@ TV-B-Gone Firmware version 1.2
 //Codes captured from Generation 3 TV-B-Gone by Limor Fried & Mitch Altman
 //table of POWER codes
 
-#include "main.h"
+// Makes the codes more readable. the OCRA is actually
+// programmed in terms of 'periods' not 'freqs' - that
+// is, the inverse!
+// #define freq_to_timerval(x) (F_CPU / 8 / x - 1)
+#define freq_to_timerval(x) (x / 1000)
+
+// Lets us calculate the size of the NA/EU databases
+#define NUM_ELEM(x) (sizeof(x) / sizeof(*(x)));
+
+
+// The structure of compressed code entries
+struct IrCode
+{
+  uint8_t timer_val;
+  uint8_t numpairs;
+  uint8_t bitcompression;
+  uint16_t const *times;
+  uint8_t const *codes;
+};
 
 const uint16_t code_na000Times[] = {
   60, 60,
@@ -8831,5 +8850,4 @@ const IrCode* const EUpowerCodes[] = {
   &code_eu139Code,
 };
 
-uint8_t num_NAcodes = NUM_ELEM(NApowerCodes);
-uint8_t num_EUcodes = NUM_ELEM(EUpowerCodes);
+
