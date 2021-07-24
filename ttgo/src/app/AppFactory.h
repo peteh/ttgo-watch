@@ -9,6 +9,7 @@
 #include "MainMenuApp.h"
 #include "RemoteControlApp.h"
 #include "WifiSettingsApp.h"
+#include "TVBGone/TVBGoneApp.h"
 
 namespace app
 {
@@ -40,6 +41,11 @@ namespace app
             if (strcmp(appId, RemoteControlApp::ID) == 0)
             {
                 return new RemoteControlApp();
+            }
+
+            if (strcmp(appId, TVBGoneApp::ID) == 0)
+            {
+                return new TVBGoneApp();
             }
 
             if (strcmp(appId, WifiSettingsApp::ID) == 0)
