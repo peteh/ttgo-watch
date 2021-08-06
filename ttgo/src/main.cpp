@@ -30,7 +30,7 @@ void setup()
     TTGOClass::getWatch()->lvgl_begin();
 
     Log::debug("Mounting FS...");
-    if (!SPIFFS.begin())
+    if (!SPIFFS.begin(true))
     {
         Log::error("Failed to mount file system");
         return;
@@ -40,7 +40,7 @@ void setup()
     // we turn the clock around to have infrared at the top and button on the left
     TTGOClass::getWatch()->lvgl_whirling(4);
     //g_app = g_appFactory.createApp(app::MainMenuApp::ID);
-    g_app = g_appFactory.createApp(app::RemoteControlApp::ID);
+    g_app = g_appFactory.createApp(app::MainMenuApp::ID);
     g_app->setup();
 }
 

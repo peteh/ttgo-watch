@@ -13,6 +13,11 @@ namespace app
     {
     }
 
+    RemoteControlApp::~RemoteControlApp()
+    {
+        lv_obj_del(m_imuPoint);
+    }
+
     void RemoteControlApp::setupApp()
     {
         Log::debug("Setup app");
@@ -86,6 +91,7 @@ namespace app
 
     const char *RemoteControlApp::loopApp()
     {
+        // TODO: handle not connected wifi
         lv_task_handler();
 
         // Obtain the BMA423 direction,

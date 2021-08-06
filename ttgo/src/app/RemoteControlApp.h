@@ -13,7 +13,7 @@ namespace app
         RemoteControlApp();
         virtual void setupApp() override;
         virtual const char *loopApp() override;
-
+        virtual ~RemoteControlApp();
     private:
         TFT_eSPI *m_tft;
         BMA *m_bmaSensor;
