@@ -2,7 +2,6 @@
 
 #include "AbstractApp.h"
 #include <LilyGoWatch.h>
-#include <Thread.h>
 
 namespace app
 {
@@ -22,7 +21,7 @@ namespace app
 
         static void _internalEventHandler(lv_obj_t *obj, lv_event_t event)
         {
-            if(s_instance!= nullptr)
+            if(s_instance == nullptr)
             {
                 Log::error("Instance already destroyed but events are coming in");
                 return;

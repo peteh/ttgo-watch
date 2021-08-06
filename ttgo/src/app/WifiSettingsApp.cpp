@@ -24,7 +24,7 @@ namespace app
 
     WifiSettingsApp::~WifiSettingsApp()
     {
-
+        Log::debug("Destructor for WifiSettings");
         lv_obj_del(m_btnScan);
         lv_obj_del(m_btnConnect);
         lv_obj_del(m_rollerWifiSSID);
@@ -125,6 +125,7 @@ namespace app
 
     void WifiSettingsApp::scanWifi()
     {
+        WiFi.disconnect();
         int n = WiFi.scanNetworks();
         Serial.println("scan done");
         String wifis = "";

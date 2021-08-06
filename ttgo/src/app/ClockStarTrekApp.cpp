@@ -10,6 +10,7 @@ namespace app
     ClockStarTrekApp::ClockStarTrekApp()
     :m_fullUpdate(true)
     {
+        setWatchButtonApp(MainMenuApp::ID);
     }
 
     void ClockStarTrekApp::setupApp()
@@ -19,10 +20,11 @@ namespace app
 
     void ClockStarTrekApp::drawBase()
     {
+        int32_t topWallWidth = 20;
         //Draw the back graphics - Top of display
         getWatch()->tft->fillScreen(TFT_BLACK);
         getWatch()->tft->fillRoundRect(0, 0, 239, 120, 40, TFT_PURPLE);
-        getWatch()->tft->fillRoundRect(40, 20, 196, 80, 20, TFT_BLACK);
+        getWatch()->tft->fillRoundRect(topWallWidth, 20, 196, 80, 20, TFT_BLACK);
         getWatch()->tft->fillRect(80, 20, 159, 80, TFT_BLACK);
         getWatch()->tft->fillRect(170, 0, 45, 20, TFT_BLACK);
         getWatch()->tft->fillRect(110, 0, 4, 20, TFT_BLACK);
@@ -76,7 +78,7 @@ namespace app
 
         getWatch()->tft->setTextColor(0xFBE0, TFT_BLACK);
         uint8_t font = 7;
-        int xpos = 40;
+        int xpos = 22;
         if (hh < 10)
         {
             xpos += getWatch()->tft->drawChar('0', xpos, 35, font);
@@ -103,7 +105,7 @@ namespace app
         getWatch()->tft->setTextSize(1);
         getWatch()->tft->setTextColor(TFT_YELLOW);
         getWatch()->tft->drawString("Power", 124, 2, 2);
-        getWatch()->tft->setTextColor(TFT_GREEN);
+        getWatch()->tft->setTextColor(TFT_GREEN, TFT_BLACK);
         int per = getWatch()->power->getBattPercentage();
         per = getWatch()->power->getBattPercentage();
         getWatch()->tft->drawString(String(per) + "%", 179, 2, 2);

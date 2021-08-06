@@ -75,7 +75,6 @@ namespace twatch
     void WifiManager::init()
     {
         std::unique_lock<std::mutex> lock(m_mutexFile);
-
         fs::File configFile = SPIFFS.open("/wifiSettings.cfg", "r");
         if (!configFile)
         {
