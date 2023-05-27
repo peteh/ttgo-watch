@@ -30,7 +30,7 @@ void setup()
     TTGOClass::getWatch()->lvgl_begin();
 
     Log::debug("Mounting FS...");
-    if (!SPIFFS.begin())
+    if (!SPIFFS.begin(true))
     {
         Log::error("Failed to mount file system");
         return;
