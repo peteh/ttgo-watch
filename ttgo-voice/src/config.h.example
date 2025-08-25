@@ -1,0 +1,13 @@
+// ---- CONFIGURE ME ----
+#pragma once
+
+#define WIFI_SSID "SSID"
+#define WIFI_PASS "pass"
+
+#define HA_USE_SSL false
+#define HA_HOST "homeassistant.local"
+#define HA_PORT 8123
+
+#define HA_TOKEN "xxx"
+ 
+
