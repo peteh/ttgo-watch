@@ -62,7 +62,10 @@ void setup()
   connectWifi();
   Serial.println("WiFi connected.");
 
+  instance.setBrightness(DEVICE_MAX_BRIGHTNESS_LEVEL);
   
+  // TODO: do this in the LoraApp
+  instance.initLoRa();
 
   // Call lvgl initialization
   beginLvglHelper(instance);
@@ -76,7 +79,7 @@ void setup()
   // Set brightness to MAX
   // T-LoRa-Pager brightness level is 0 ~ 16
   // T-Watch-S3 , T-Watch-S3-Plus , T-Watch-Ultra brightness level is 0 ~ 255
-  instance.setBrightness(DEVICE_MAX_BRIGHTNESS_LEVEL);
+  
 }
 
 

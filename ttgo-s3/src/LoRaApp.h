@@ -1,6 +1,6 @@
 #include <lvgl.h>
-
-class LoRaApp
+#include "App.h"
+class LoRaApp : public App
 {
 public:
     enum class EventType
@@ -10,10 +10,11 @@ public:
     };
 
     LoRaApp() = default;
-    void setup();
-    void loop();
+    void setup() override;
+    void loop() override;
+    bool networkJoin();
     void sendUplink(EventType eventType);
-    void btn_event_cb(lv_event_t *e);
+    void buttonEventCallback(lv_event_t *e);
     ~LoRaApp() = default;
 
 private:

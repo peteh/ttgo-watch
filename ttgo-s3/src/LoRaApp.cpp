@@ -142,7 +142,7 @@ void printHex(const char *label, const uint8_t *buf, size_t len)
     Serial.println();
 }
 
-void LoRaApp::btn_event_cb(lv_event_t *e)
+void LoRaApp::buttonEventCallback(lv_event_t *e)
 {
     lv_event_code_t code = lv_event_get_code(e);
     lv_obj_t *btn = lv_event_get_target_obj(e);
@@ -158,13 +158,43 @@ void LoRaApp::btn_event_cb(lv_event_t *e)
     }
 }
 
+bool LoRaApp::networkJoin()
+{
+    uint64_t devEUI = generateDevEUI();
+    // 4. Configure LoRaWAN node
+    // Persistent session storage (survives deep sleep):
+    //   node.setDeviceAddress(...)  — not needed for OTAA
+    // DevNonce counter is stored in NVS automatically by RadioLib.
+
+    // print all parameters for chirpstack - so we can just copy and paste
+    Serial.println("[LoRaWAN] Configuring node with OTAA credentials...");
+    Serial.printf("[LoRaWAN] Join EUI: %016llX\n", joinEUI);
+    Serial.printf("[LoRaWAN] Dev EUI: %016llX\n", devEUI);
+
+    printHex("[LoRaWAN] App Key: ", appKey, 16);
+    printHex("[LoRaWAN] Nwk Key: ", nwkKey, 16);
+
+    node.beginOTAA(joinEUI, devEUI, nwkKey, appKey);
+
+    // 5. Join the network
+    Serial.println("[LoRaWAN] Joining network (OTAA)...");
+    int16_t state = node.activateOTAA();
+    if (state != RADIOLIB_LORAWAN_SESSION_RESTORED &&
+        state != RADIOLIB_LORAWAN_NEW_SESSION &&
+        state != RADIOLIB_ERR_NONE)
+    {
+        Serial.printf("[LoRaWAN] Join failed (code %d)\n", state);
+        Serial.println("[HINT] Check DevEUI byte order and AppKey in ChirpStack.");
+        return false;
+    }
+    return true;
+}
+
 void LoRaApp::setup()
 {
     Serial.begin(115200);
     delay(2000); // Give time for serial monitor to connect
     Serial.println("\n[T-Watch S3] LoRaWAN OTAA node starting...");
-
-    uint64_t devEUI = generateDevEUI();
 
     // 1. Power on peripherals via PMU
     if (!initPMU())
@@ -189,37 +219,6 @@ void LoRaApp::setup()
     }
     Serial.println("OK");
 
-    // 4. Configure LoRaWAN node
-    // Persistent session storage (survives deep sleep):
-    //   node.setDeviceAddress(...)  — not needed for OTAA
-    // DevNonce counter is stored in NVS automatically by RadioLib.
-
-    // print all parameters for chirpstack - so we can just copy and paste
-    Serial.println("[LoRaWAN] Configuring node with OTAA credentials...");
-    Serial.printf("[LoRaWAN] Join EUI: %016llX\n", joinEUI);
-    Serial.printf("[LoRaWAN] Dev EUI: %016llX\n", devEUI);
-
-    printHex("[LoRaWAN] App Key: ", appKey, 16);
-    printHex("[LoRaWAN] Nwk Key: ", nwkKey, 16);
-
-    node.beginOTAA(joinEUI, devEUI, nwkKey, appKey);
-
-    // 5. Join the network
-    Serial.println("[LoRaWAN] Joining network (OTAA)...");
-    state = node.activateOTAA();
-    if (state != RADIOLIB_LORAWAN_SESSION_RESTORED &&
-        state != RADIOLIB_LORAWAN_NEW_SESSION &&
-        state != RADIOLIB_ERR_NONE)
-    {
-        Serial.printf("[LoRaWAN] Join failed (code %d)\n", state);
-        Serial.println("[HINT] Check DevEUI byte order and AppKey in ChirpStack.");
-        while (true)
-            delay(1000);
-    }
-    Serial.printf("[LoRaWAN] Joined! DevAddr: 0x%08X\n", node.getDevAddr());
-    m_joined = true;
-    m_lastTx = millis();
-
     lv_obj_t *label = lv_label_create(lv_screen_active()); /*Add a label the current screen*/
     lv_label_set_text(label, "Hello World");               /*Set label text*/
     lv_obj_center(label);                                  /*Set center alignment*/
@@ -230,15 +229,13 @@ void LoRaApp::setup()
     lv_obj_add_event_cb(m_btn, [](lv_event_t *e)
                         {
         auto *app = static_cast<LoRaApp *>(lv_event_get_user_data(e));
-        app->btn_event_cb(e); }, LV_EVENT_ALL, this);                 /*Assign a callback to the button*/
+        app->buttonEventCallback(e); }, LV_EVENT_ALL, this);                 /*Assign a callback to the button*/
     lv_obj_align_to(m_btn, label, LV_ALIGN_OUT_BOTTOM_MID, 0, 0); /*Set the label to it and align it in the center below the label*/
 
     lv_obj_t *btn_label = lv_label_create(m_btn); /*Add a label to the button*/
     lv_label_set_text(btn_label, "Button");       /*Set the labels text*/
     lv_obj_center(btn_label);
 }
-
-
 
 void LoRaApp::sendUplink(EventType eventType)
 {
@@ -256,12 +253,13 @@ void LoRaApp::sendUplink(EventType eventType)
     payload[3] = (battMV >> 8) & 0xFF;
     payload[4] = battMV & 0xFF;
 
-
     Serial.printf("[TX] counter=%u  batt=%u mV\n", counter, battMV);
 
     // Send on port 1, unconfirmed
     int16_t state = node.sendReceive(payload, sizeof(payload), 1, true);
 
+    // Check if a downlink was received 
+    // (state 0 = no downlink, state 1/2 = downlink in window Rx1/Rx2)
     if (state == RADIOLIB_ERR_NONE)
     {
         Serial.println("[TX] Uplink sent, no downlink.");
@@ -284,8 +282,6 @@ void LoRaApp::sendUplink(EventType eventType)
 
 void LoRaApp::loop()
 {
-    if (!m_joined)
-        return;
 
     uint32_t now = millis();
     if (now - m_lastTx < TX_INTERVAL_MS)
@@ -294,5 +290,16 @@ void LoRaApp::loop()
         return;
     }
     m_lastTx = now;
+    if (!m_joined)
+    {
+        if (networkJoin())
+        {
+
+            Serial.printf("[LoRaWAN] Joined! DevAddr: 0x%08X\n", node.getDevAddr());
+            m_joined = true;
+        }
+        return;
+    }
+
     sendUplink(EventType::STATUS);
 }
