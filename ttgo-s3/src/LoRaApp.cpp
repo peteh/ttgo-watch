@@ -183,18 +183,21 @@ void LoRaApp::setupNetwork()
     m_store.begin("radiolib");
     if (m_store.isKey("nonces"))
     {
+        Serial.println("[LoRaWAN] Restoring nonces and session from flash...");
         uint8_t buffer[RADIOLIB_LORAWAN_NONCES_BUF_SIZE];
         m_store.getBytes("nonces", buffer, RADIOLIB_LORAWAN_NONCES_BUF_SIZE);
         node.setBufferNonces(buffer);
         node.setBufferSession(g_lwSession); // from RTC RAM
         //node.activateOTAA();                // restores session if valid
     }
+    else
+    {
+        Serial.println("[LoRaWAN] No nonces in flash, starting fresh.");
+    }
 }
 
 bool LoRaApp::networkJoin()
 {
-
-    // 5. Join the network
     Serial.println("[LoRaWAN] Joining network (OTAA)...");
     int16_t state = node.activateOTAA();
     if (state != RADIOLIB_LORAWAN_SESSION_RESTORED &&
