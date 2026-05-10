@@ -79,6 +79,7 @@ static const uint8_t nwkKey[] = {
 // =========================================================
 // Globals
 // =========================================================
+RTC_DATA_ATTR uint8_t g_lwSession[RADIOLIB_LORAWAN_SESSION_BUF_SIZE];
 SPIClass loraSPI(FSPI);
 extern SX1262 radio;
 // SX1262   radio = new Module(RADIO_CS, RADIO_DIO1, RADIO_RST, RADIO_BUSY, loraSPI);
@@ -138,7 +139,9 @@ void printHex(const char *label, const uint8_t *buf, size_t len)
 {
     Serial.print(label);
     for (size_t i = 0; i < len; i++)
+    {
         Serial.printf("%02X", buf[i]);
+    }
     Serial.println();
 }
 
@@ -158,7 +161,7 @@ void LoRaApp::buttonEventCallback(lv_event_t *e)
     }
 }
 
-bool LoRaApp::networkJoin()
+void LoRaApp::setupNetwork()
 {
     uint64_t devEUI = generateDevEUI();
     // 4. Configure LoRaWAN node
@@ -176,6 +179,21 @@ bool LoRaApp::networkJoin()
 
     node.beginOTAA(joinEUI, devEUI, nwkKey, appKey);
 
+    // ##### if we have previously saved nonces, restore them and try to restore session as well
+    m_store.begin("radiolib");
+    if (m_store.isKey("nonces"))
+    {
+        uint8_t buffer[RADIOLIB_LORAWAN_NONCES_BUF_SIZE];
+        m_store.getBytes("nonces", buffer, RADIOLIB_LORAWAN_NONCES_BUF_SIZE);
+        node.setBufferNonces(buffer);
+        node.setBufferSession(g_lwSession); // from RTC RAM
+        //node.activateOTAA();                // restores session if valid
+    }
+}
+
+bool LoRaApp::networkJoin()
+{
+
     // 5. Join the network
     Serial.println("[LoRaWAN] Joining network (OTAA)...");
     int16_t state = node.activateOTAA();
@@ -187,6 +205,9 @@ bool LoRaApp::networkJoin()
         Serial.println("[HINT] Check DevEUI byte order and AppKey in ChirpStack.");
         return false;
     }
+
+    // After successful new join — save nonces to flash:
+    m_store.putBytes("nonces", node.getBufferNonces(), RADIOLIB_LORAWAN_NONCES_BUF_SIZE);
     return true;
 }
 
@@ -218,6 +239,7 @@ void LoRaApp::setup()
             delay(1000);
     }
     Serial.println("OK");
+    setupNetwork();
 
     lv_obj_t *label = lv_label_create(lv_screen_active()); /*Add a label the current screen*/
     lv_label_set_text(label, "Hello World");               /*Set label text*/
@@ -258,7 +280,7 @@ void LoRaApp::sendUplink(EventType eventType)
     // Send on port 1, unconfirmed
     int16_t state = node.sendReceive(payload, sizeof(payload), 1, true);
 
-    // Check if a downlink was received 
+    // Check if a downlink was received
     // (state 0 = no downlink, state 1/2 = downlink in window Rx1/Rx2)
     if (state == RADIOLIB_ERR_NONE)
     {
@@ -278,6 +300,8 @@ void LoRaApp::sendUplink(EventType eventType)
     {
         Serial.printf("[TX] Error (code %d)\n", state);
     }
+    // After each uplink — save session to RTC RAM only:
+    memcpy(g_lwSession, node.getBufferSession(), RADIOLIB_LORAWAN_SESSION_BUF_SIZE);
 }
 
 void LoRaApp::loop()

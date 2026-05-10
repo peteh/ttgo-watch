@@ -1,5 +1,7 @@
 #include <lvgl.h>
+#include <Preferences.h>
 #include "App.h"
+
 class LoRaApp : public App
 {
 public:
@@ -11,6 +13,7 @@ public:
 
     LoRaApp() = default;
     void setup() override;
+    void setupNetwork();
     void loop() override;
     bool networkJoin();
     void sendUplink(EventType eventType);
@@ -21,4 +24,6 @@ private:
     lv_obj_t *m_btn = nullptr;
     bool m_joined = false;
     uint32_t m_lastTx = 0;
+
+    Preferences m_store;
 };
